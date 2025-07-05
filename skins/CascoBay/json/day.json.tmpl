@@ -1,0 +1,41 @@
+#set $params = [
+    {'name': 'barometer', 'agg': None, 'interval': None},
+    {'name': 'outTemp', 'agg': None, 'interval': None},
+    {'name': 'inTemp', 'agg': None, 'interval': None},
+    {'name': 'dewpoint', 'agg': None, 'interval': None},
+    {'name': 'outHumidity', 'agg': None, 'interval': None},
+    {'name': 'rain', 'agg': 'sum', 'interval': '1h'},
+    {'name': 'rainRate', 'agg': None, 'interval': None},
+    {'name': 'windDir', 'agg': 'avg', 'interval': 120},
+    {'name': 'windSpeed', 'agg': 'avg', 'interval': 120},
+    {'name': 'windGust', 'agg': 'max', 'interval': 120}
+]
+
+#set $span24 = $span($hour_delta=24)
+{
+  "data":
+  {
+  #set $first = True
+  #for $item in $params
+    #set $name = $item['name']
+    #set $agg = $item['agg']
+    #set $interval = $item['interval']
+    #set $obs = getattr($span24, $name)
+    #if $obs.has_data
+      #if not $first
+        ,
+      #end if
+      "$name": {
+        "values":
+        #if $agg and $interval
+          $obs.series(aggregate_type=$agg, aggregate_interval=$interval, time_series='start').json,
+        #else
+          $obs.series(time_series='start').json,
+        #end if
+        "units": "$getattr($current, $name).format(' ').lstrip()"
+      }
+      #set $first = False
+    #end if
+  #end for
+  }
+}

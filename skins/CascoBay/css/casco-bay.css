@@ -1,0 +1,53 @@
+/* CSS for the weewx Casco Bay skin
+ */
+
+.sidebar-collapsed #sidebar {
+    width: 0 !important;
+}
+
+/* Casco Bay Theme */
+body {
+    background-color: #202020; /* dark slate variant */
+    color: #dee9ed; /* casco-sky */
+}
+
+.title-bar {
+    background-color: #306e6d ; /* casco-green */
+    color: #f1f3f0;
+}
+
+.panel {
+    background-color: #253C4D; /* slightly lighter than bg */
+    color: #F2F2F0;
+}
+
+.section-header {
+    color: #f1f3f0;
+    border-color: #7A7E82;
+}
+
+.dropdown, .btn, select {
+    background-color: #7A7E82;
+    color: #dee9ed;
+}
+
+.btn-active {
+    border-bottom: 2px solid #84B8D8;
+    color: #dee9ed;
+}
+
+.footer {
+    color: #6c6764;
+}
+
+.footer a {
+    color: #A69C8A;
+}
+
+.footer a:hover {
+    text-decoration: underline;
+}
+
+.text-muted {
+    color: #AABDC7; /* cooler muted tone */
+}

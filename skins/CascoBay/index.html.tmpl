@@ -1,0 +1,177 @@
+## Specifying an encoding of UTF-8 is usually safe:
+#encoding UTF-8
+##
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    ## This choice should match the #encoding directive above
+    <meta charset="UTF-8">
+    <meta http-equiv="refresh" content="120">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>$station.location</title>
+    <link rel="icon" type="image/png" href="favicon.ico"/>
+
+    <!-- Highcharts Library -->
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+
+     <!-- Casco Bay JS -->
+    <script src="javascript/charts.js"></script>
+    <script src="javascript/nws-alerts.js"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Casco Bay CSS -->
+    <link rel="stylesheet" type="text/css" href="css/casco-bay.css"/>
+
+    <!-- Apple-specific meta tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="WeeWX">
+    <link rel="apple-touch-icon" href="appicon.png">
+
+    <!-- Android tags -->
+    <link rel="manifest" href="manifest.json">
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('javascript/service-worker.js')
+                .then(() => console.log('Service Worker Registered'));
+        }
+    </script>
+
+    <!-- Get sidebar state from localStorage -->
+    <script>
+        (() => {
+            const collapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            if (collapsed) {
+                document.documentElement.classList.add('sidebar-collapsed');
+            }
+        })();
+    </script>
+</head>
+
+<body class="m-3 bg-gray-900 text-gray-100 font-sans">
+
+<div id="title_bar" class="title-bar flex flex-col md:flex-row justify-between items-center p-2 rounded shadow mb-3">
+    <div id="title" class="mb-4 md:mb-0">
+        <h1 class="text-2xl font-bold">$station.location</h1>
+        <p class="text-sm opacity-80">Last Update: $current.dateTime</p>
+    </div>
+
+    <div id="reports" class="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-4">
+        <div class="flex items-center space-x-2">
+            <span class="text-sm font-semibold">Monthly Reports:</span>
+            <select name="reports" onchange="openTabularFile(value)" class="bg-gray-700 text-white rounded p-1">
+                #for $monthYear in $SummaryByMonth
+                <option value="$monthYear">$monthYear</option>
+                #end for
+                <option selected>- Select Month -</option>
+            </select>
+        </div>
+
+        <div class="flex items-center space-x-2">
+            <span class="text-sm font-semibold">Yearly Reports:</span>
+            <select name="reports" onchange="openTabularFile(value)" class="bg-gray-700 text-white rounded p-1">
+                #for $yr in $SummaryByYear
+                <option value="$yr">$yr</option>
+                #end for
+                <option selected>- Select Year -</option>
+            </select>
+        </div>
+
+        <button id="sidebar-toggle" onclick="toggleSidebar()" class="text-sm text-teal-400 hover:underline px-2 mb-2">
+            Hide Sidebar
+        </button>
+        <button id="alerts-toggle" onclick="toggleAlerts()" class="text-sm text-teal-400 hover:underline px-2 mb-2">
+            Hide Alerts
+        </button>
+    </div>
+
+</div>
+
+<div class="flex gap-5">
+
+    <!-- Sidebar container-->
+    <div id="sidebar"
+         class="md:w-80 w-full flex flex-col space-y-2 transition-all duration-300 ease-in-out overflow-hidden">
+
+        <!-- Current Conditions -->
+        <h2 class="font-semibold text-white pb-0.5 border-b border-gray-600 mb-2 px-2">Current Conditions</h2>
+        <div class="bg-gray-800 text-white text-sm space-y-1 p-2 rounded shadow">
+            #include "includes/current.inc"
+        </div>
+
+        <!-- Celestial -->
+        <h2 class="font-semibold text-white pb-0.5 border-b border-gray-600 mb-2 px-2">Celestial</h2>
+        <div class="bg-gray-800 text-white text-sm font-medium p-2 rounded shadow">
+            #include "includes/celestial.inc"
+        </div>
+
+        <!-- Almanac -->
+        <h2 class="font-semibold text-white pb-0.5 border-b border-gray-600 mb-2 px-2">Almanac</h2>
+        <div class="bg-gray-800 text-white text-sm overflow-x-auto p-2 rounded shadow">
+            #include "includes/almanac.inc"
+        </div>
+
+        <!-- Sensor Status -->
+        <h2 class="font-semibold text-white pb-0.5 border-b border-gray-600 mb-2 px-2">Sensor Status</h2>
+        <div class="bg-gray-800 text-white text-sm rounded shadow space-y-1 p-2 ">
+            #include "includes/sensors.inc"
+        </div>
+
+        <!-- About -->
+        <h2 class="font-semibold text-white pb-0.5 border-b border-gray-600 mb-2 px-2">About this weather station</h2>
+        <div class="bg-gray-800 text-white text-sm rounded shadow space-y-1 p-2 ">
+            #include "includes/about.inc"
+        </div>
+    </div>
+
+    <!-- Chart Container -->
+    <div class="flex flex-col flex-grow">
+
+        <!-- NWS Alert banners -->
+        <div id="nws-alerts-container" data-lat="$station.latitude" data-lon="$station.longitude"
+             class="space-y-4"></div>
+
+        <!-- Time Range Buttons -->
+        <div class="flex space-x-4 text-sm font-semibold text-white border-b border-gray-600 mb-4 px-4"
+             id="time-range-buttons">
+            <span class="text-gray-400 mr-2">Graph History:</span>
+            <button class="time-range-btn pb-1 border-b-2 border-teal-400" data-range="day">Past Day</button>
+            <button class="time-range-btn pb-1 hover:border-b-2 hover:border-teal-400" data-range="week">Past Week
+            </button>
+            <button class="time-range-btn pb-1 hover:border-b-2 hover:border-teal-400" data-range="month">Past Month
+            </button>
+            <button class="time-range-btn pb-1 hover:border-b-2 hover:border-teal-400" data-range="year"> Past Year
+            </button>
+        </div>
+
+        <!-- Charts Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div id="temp-dewpoint" class="h-[300px] bg-gray-800 rounded shadow"></div>
+            <div id="outside-humidity" class="h-[300px] bg-gray-800 rounded shadow"></div>
+            <div id="wind-speed" class="h-[300px] bg-gray-800 rounded shadow"></div>
+            <div id="wind-direction" class="h-[300px] bg-gray-800 rounded shadow"></div>
+            <div id="rain" class="h-[300px] bg-gray-800 rounded shadow"></div>
+            <div id="rainrate" class="h-[300px] bg-gray-800 rounded shadow"></div>
+            <div id="barometer" class="h-[300px] bg-gray-800 rounded shadow"></div>
+            <div id="inside-temperature" class="h-[300px] bg-gray-800 rounded shadow"></div>
+        </div>
+    </div>
+</div>
+
+<footer class="mt-3 text-center text-sm text-gray-400">
+    <p>
+        This station is powered by
+        <a href="http://weewx.com/" class="text-teal-400 hover:underline" target="_blank" rel="noopener noreferrer">WeeWX</a>,
+        an experimental weather software system written in Python.
+        <a href="https://github.com/HumphreysCarter/weewx-skins" class="text-teal-400 hover:underline" target="_blank"
+           rel="noopener noreferrer">Casco Bay skin</a> developed by Carter Humphreys.
+    </p>
+</footer>
+
+</body>
+
+</html>
